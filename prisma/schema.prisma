@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // URL BURADA OLMAYACAK, SİLDİK.
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  musteriAd    String
+  telefon      String
+  sehir        String
+  ilce         String
+  adresDetay   String
+  siparisNotu  String?
+  toplamFiyat  Float
+  durum        String   @default("Beklemede")
+  createdAt    DateTime @default(now())
+}
