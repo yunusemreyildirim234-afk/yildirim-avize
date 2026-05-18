@@ -9,7 +9,7 @@ export default function Iletisim() {
           <h2 className="text-xl font-semibold border-b border-zinc-700 pb-2 text-yellow-500">Mağaza Bilgileri</h2>
           <p><strong>Adres:</strong> Tevfikiye Han, İskender Cad, Nazlı Hanım Sk. No:6 D:11, 34420 Beyoğlu/İstanbul</p>
           <p><strong>Telefon:</strong> 0537 211 42 23</p>
-          <p><strong>E-posta:</strong> yildirimavize234@gmail.com</p>
+          <p><strong>E-posta:</strong> yunusemreyildirim234@gmail.com</p>
           <div className="mt-4">
             <h3 className="font-bold mb-2">Çalışma Saatleri</h3>
             <p className="text-sm text-zinc-400">Pazartesi - Cuma: 09:00 - 18:00</p>

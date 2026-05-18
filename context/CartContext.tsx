@@ -5,44 +5,55 @@ const CartContext = createContext<any>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<any[]>([]);
+  const [yuklendi, setYuklendi] = useState(false);
 
-  // 1. Ürün Silme Fonksiyonu
-  const removeFromCart = (productId: number) => {
-    setCart((prevCart) => prevCart.filter(item => item.id !== productId));
+  // Sayfa açılınca localStorage'dan yükle
+  useEffect(() => {
+    const saved = localStorage.getItem("yildirim-cart");
+    if (saved) {
+      try { setCart(JSON.parse(saved)); } catch {}
+    }
+    setYuklendi(true);
+  }, []);
+
+  // Sepet değişince localStorage'a kaydet
+  useEffect(() => {
+    if (yuklendi) {
+      localStorage.setItem("yildirim-cart", JSON.stringify(cart));
+    }
+  }, [cart, yuklendi]);
+
+  const addToCart = (product: any) => {
+    setCart((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
   };
 
-  // 2. Adet Güncelleme Fonksiyonu (+ / -)
+  const removeFromCart = (productId: number) => {
+    setCart((prev) => prev.filter((item) => item.id !== productId));
+  };
+
   const updateQuantity = (productId: number, amount: number) => {
-    setCart((prevCart) =>
-      prevCart.map((item) => {
+    setCart((prev) =>
+      prev.map((item) => {
         if (item.id === productId) {
-          const newQuantity = (item.quantity || 1) + amount;
-          // Adet 1'den az olamaz
-          return { ...item, quantity: newQuantity < 1 ? 1 : newQuantity };
+          const newQty = (item.quantity || 1) + amount;
+          return { ...item, quantity: newQty < 1 ? 1 : newQty };
         }
         return item;
       })
     );
   };
 
-  // Sepete Ekleme (Geliştirilmiş: Aynı ürün varsa adedi artırır)
-  const addToCart = (product: any) => {
-    setCart((prevCart) => {
-      const existingProduct = prevCart.find((item) => item.id === product.id);
-      if (existingProduct) {
-        return prevCart.map((item) =>
-          item.id === product.id 
-            ? { ...item, quantity: (item.quantity || 1) + 1 } 
-            : item
-        );
-      }
-      return [...prevCart, { ...product, quantity: 1 }];
-    });
-  };
-
-  // Sepeti Tamamen Temizleme
   const clearCart = () => {
     setCart([]);
+    localStorage.removeItem("yildirim-cart");
   };
 
   return (

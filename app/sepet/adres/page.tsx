@@ -1,20 +1,23 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createOrder } from "@/app/actions"; // Server Action importu
+import { useCart } from "@/context/CartContext";
+import { createOrder } from "@/app/actions";
 
 export default function AdresPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // Kayıt sırasında butonu kilitlemek için
-  
+  const { cart } = useCart();
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
-    adSoyad: "",
-    telefon: "",
-    sehir: "",
-    ilce: "",
-    adresDetay: "",
-    siparisNotu: ""
+    adSoyad: "", telefon: "", sehir: "", ilce: "", adresDetay: "", siparisNotu: ""
   });
+
+  // Sepet toplamını burada hesaplıyoruz
+  const parsePrice = (priceStr: string) => parseInt(priceStr?.replace(/\D/g, "") || "0");
+  const araToplam = cart.reduce((acc: number, item: any) => acc + parsePrice(item.fiyat) * (item.quantity || 1), 0);
+  const kargoUcreti = araToplam > 5000 || araToplam === 0 ? 0 : 150;
+  const genelToplam = araToplam + kargoUcreti;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,19 +26,14 @@ export default function AdresPage() {
   const handleDevamEt = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      // Form verilerini Server Action'a gönderiyoruz
-      const result = await createOrder(formData);
-      
+      const result = await createOrder(formData, genelToplam); // cartTotal artık gönderiliyor
       if (result.success) {
-        // SQL'e kayıt başarılıysa yönlendir
         router.push("/sepet/adres/odeme");
       } else {
         alert("Sipariş kaydedilirken bir hata oluştu.");
       }
     } catch (error) {
-      console.error("Hata:", error);
       alert("Bağlantı hatası oluştu.");
     } finally {
       setLoading(false);
@@ -45,7 +43,6 @@ export default function AdresPage() {
   return (
     <div className="min-h-screen bg-black text-white pt-32 px-6 pb-20">
       <div className="max-w-4xl mx-auto">
-        {/* Adım Göstergesi */}
         <div className="flex items-center justify-center gap-4 mb-12 text-xs font-bold uppercase tracking-widest text-zinc-500">
           <span className="text-yellow-500 border-b-2 border-yellow-500 pb-1">1. Adres Bilgileri</span>
           <span>→</span>
@@ -79,15 +76,13 @@ export default function AdresPage() {
             <label className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">Tam Adres</label>
             <textarea required name="adresDetay" onChange={handleChange} rows={3} className="w-full bg-black/50 border border-white/10 p-4 rounded-xl outline-none focus:border-yellow-500 transition-all text-sm resize-none" placeholder="Adres detayları"></textarea>
           </div>
-
           <div className="space-y-2 col-span-2">
             <label className="text-[10px] uppercase text-yellow-500 font-bold tracking-widest">Sipariş Notu (Opsiyonel)</label>
             <textarea name="siparisNotu" onChange={handleChange} rows={2} className="w-full bg-black/20 border border-yellow-500/10 p-4 rounded-xl outline-none focus:border-yellow-500 transition-all text-sm resize-none italic" placeholder="Örn: Kristal taşlar yedekli gelsin vb."></textarea>
           </div>
-
           <div className="col-span-2 pt-6">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
               className={`w-full bg-white text-black font-black py-4 rounded-xl hover:bg-yellow-400 transition-all uppercase shadow-lg active:scale-95 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
